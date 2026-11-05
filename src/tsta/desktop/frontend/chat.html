@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>密米尔 · 对话</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    .chat-root { height: 100%; display: flex; flex-direction: column; background: var(--bg); }
+    .chat-root .chat-head { border-bottom: 1px solid var(--border); }
+    .chat-root .chat-msgs { flex: 1; }
+    .chat-root .chat-input-row { border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <div class="chat-root">
+    <div class="chat-head">
+      <span class="chat-label">对话</span>
+      <div class="chat-head-actions">
+        <button class="icon-btn" id="btn-clear" title="清空对话">↺</button>
+        <button class="btn ghost" id="btn-merge" title="合并回主窗口">↩ 合并回主窗口</button>
+      </div>
+    </div>
+    <div class="chat-msgs" id="chat-msgs"></div>
+    <div class="chat-input-row">
+      <textarea class="input chat-input" id="chat-input" rows="2"
+        placeholder="和 AI 自由对话…（Ctrl+Enter 发送）"></textarea>
+      <button class="btn primary" id="btn-send">发送</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let api = null;
+    const $ = (sel) => document.querySelector(sel);
+
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, (c) => (
+        { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+      ));
+    }
+
+    function toast(msg, type = "") {
+      const el = $("#toast");
+      el.textContent = msg;
+      el.className = "toast show " + type;
+      clearTimeout(el._t);
+      el._t = setTimeout(() => (el.className = "toast " + type), 3200);
+    }
+
+    function renderMd(src) {
+      if (!src) return "";
+      const blocks = [];
+      let s = esc(src).replace(/```([\s\S]*?)```/g, (m, code) => {
+        blocks.push(`<pre class="md-code">${code.trim()}</pre>`);
+        return `\u0000CODE${blocks.length - 1}\u0000`;
+      });
+      s = s.replace(/`([^`\n]+)`/g, '<code class="md-inline">$1</code>');
+      s = s.replace(/^#{4,}\s*(.+)$/gm, '<h4 class="md-h4">$1</h4>');
+      s = s.replace(/^###\s*(.+)$/gm, '<h4 class="md-h4">$1</h4>');
+      s = s.replace(/^##\s*(.+)$/gm, '<h3 class="md-h3">$1</h3>');
+      s = s.replace(/^#\s*(.+)$/gm, '<h3 class="md-h3">$1</h3>');
+      s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      s = s.replace(/^[-*•]\s+(.+)$/gm, '<div class="md-li">· $1</div>');
+      s = s.replace(/^(\d+)[.)]\s+(.+)$/gm, '<div class="md-li">$1. $2</div>');
+      s = s.replace(/\n/g, "<br>");
+      s = s.replace(/\u0000CODE(\d+)\u0000/g, (m, i) => blocks[+i]);
+      return s;
+    }
+
+    function renderChat(messages) {
+      const el = $("#chat-msgs");
+      if (!messages || !messages.length) {
+        el.innerHTML = '<div class="chat-empty">开始和 AI 对话吧</div>';
+        return;
+      }
+      el.innerHTML = messages.map((m) => `
+        <div class="chat-msg ${m.role}">
+          <div class="chat-bubble">${m.role === "assistant" ? renderMd(m.content) : esc(m.content)}</div>
+        </div>`).join("");
+      el.scrollTop = el.scrollHeight;
+    }
+
+    async function refreshChat() {
+      const r = await api.chat_history();
+      if (r.ok) renderChat(r.messages);
+    }
+
+    async function sendChat() {
+      const input = $("#chat-input");
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      const r = await api.chat_send(text);
+      if (!r.ok) { input.value = text; toast(r.message, "error"); return; }
+      renderChat(r.messages);
+    }
+
+    async function clearChat() {
+      if (!confirm("清空所有对话记录？")) return;
+      const r = await api.chat_clear();
+      renderChat(r.messages);
+    }
+
+    async function mergeChat() {
+      await api.merge_chat();
+    }
+
+    // Called by Python (pop_chat) to refresh this window's history on show.
+    window.__refreshChat = refreshChat;
+
+    window.addEventListener("pywebviewready", () => {
+      api = window.pywebview.api;
+      $("#btn-send").addEventListener("click", sendChat);
+      $("#btn-clear").addEventListener("click", clearChat);
+      $("#btn-merge").addEventListener("click", mergeChat);
+      $("#chat-input").addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendChat(); }
+      });
+      refreshChat();
+    });
+  </script>
+</body>
+</html>

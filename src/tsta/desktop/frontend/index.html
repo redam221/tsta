@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>密米尔 Mimir — 树状思维智能体</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ── Top bar ─────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 18 L16 10.5" />
+        <path d="M16 10.5 L16 3.5" />
+        <path d="M16 10.5 L9 6" />
+        <path d="M16 10.5 L23 6" />
+        <path d="M16 3.5 L13.5 1" />
+        <path d="M16 3.5 L18.5 1" />
+        <path d="M9 6 L6.5 3" />
+        <path d="M9 6 L8 2.5" />
+        <path d="M23 6 L25.5 3" />
+        <path d="M23 6 L24 2.5" />
+        <path d="M11 22.5 Q16 19 21 22.5" />
+        <path d="M7.5 25.5 Q16 21 24.5 25.5" />
+        <path d="M4.5 28.5 Q16 23 27.5 28.5" />
+      </svg>
+      <div class="brand-text">
+        <span class="brand-name">Mimir</span>
+        <span class="brand-sub">密米尔 · 知识谱系的源泉</span>
+      </div>
+    </div>
+
+    <div class="tree-title" id="tree-title">未打开知识树</div>
+
+    <div class="top-actions">
+      <button class="btn ghost" id="btn-export" title="导出所有思考路径">
+        <span>导出</span>
+      </button>
+      <button class="btn ghost" id="btn-settings" title="设置">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Body ────────────────────────────────────────────── -->
+  <div class="app-body">
+    <!-- Sidebar: trees list -->
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <span class="sidebar-label">知识树</span>
+        <button class="icon-btn" id="btn-new-tree" title="新建知识树">＋</button>
+      </div>
+      <div class="tree-list" id="tree-list"></div>
+      <div class="sidebar-foot">
+        <div class="stats" id="tree-stats"></div>
+      </div>
+    </aside>
+
+    <!-- Main: tree view -->
+    <main class="content" id="content">
+      <div class="empty-state" id="empty-state">
+        <svg viewBox="0 0 32 32" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 18 L16 10.5" /><path d="M16 10.5 L16 3.5" /><path d="M16 10.5 L9 6" /><path d="M16 10.5 L23 6" />
+          <path d="M16 3.5 L13.5 1" /><path d="M16 3.5 L18.5 1" /><path d="M9 6 L6.5 3" /><path d="M9 6 L8 2.5" />
+          <path d="M23 6 L25.5 3" /><path d="M23 6 L24 2.5" />
+          <path d="M11 22.5 Q16 19 21 22.5" /><path d="M7.5 25.5 Q16 21 24.5 25.5" /><path d="M4.5 28.5 Q16 23 27.5 28.5" />
+        </svg>
+        <p class="empty-title">从一个问题开始，长成一棵知识树</p>
+        <p class="empty-desc">树状思维智能体 · 每一个追问都是新的枝桠，脉络可追溯</p>
+        <button class="btn primary" id="btn-empty-new">新建知识树</button>
+      </div>
+      <div class="tree-canvas" id="tree-canvas" style="display:none"></div>
+
+      <!-- Mind map: parent-child relationship overview -->
+      <div class="mindmap" id="mindmap" style="display:none">
+        <div class="mindmap-head" id="mindmap-head">
+          <span class="mindmap-label">导图 · 父子关系</span>
+          <button class="icon-btn" id="btn-map-collapse" title="收起导图">—</button>
+        </div>
+        <div class="mindmap-body" id="mindmap-body"></div>
+      </div>
+    </main>
+
+    <!-- Right column: node detail + chat -->
+    <div class="right-col" id="right-col">
+      <aside class="detail" id="detail-panel">
+        <div class="detail-head">
+          <span class="detail-label">节点详情</span>
+          <button class="icon-btn" id="btn-close-detail">✕</button>
+        </div>
+        <div class="detail-body" id="detail-body"></div>
+      </aside>
+
+      <section class="chat-panel" id="chat-panel">
+        <div class="chat-head">
+          <span class="chat-label">对话</span>
+          <div class="chat-head-actions">
+            <button class="icon-btn" id="btn-chat-clear" title="清空对话">↺</button>
+            <button class="icon-btn" id="btn-chat-pop" title="弹出为独立窗口">↗</button>
+          </div>
+        </div>
+        <div class="chat-popped-hint" id="chat-popped-hint" style="display:none">
+          聊天已在独立窗口中
+          <button class="btn ghost" id="btn-chat-remerge">合并回来</button>
+        </div>
+        <div class="chat-msgs" id="chat-msgs"></div>
+        <div class="chat-input-row">
+          <textarea class="input chat-input" id="chat-input" rows="2"
+            placeholder="和 AI 自由对话…（Ctrl+Enter 发送）"></textarea>
+          <button class="btn primary" id="btn-chat-send">发送</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ── Modals ──────────────────────────────────────────── -->
+
+  <!-- New tree -->
+  <div class="overlay" id="overlay-new">
+    <div class="modal">
+      <h2 class="modal-title">新建知识树</h2>
+      <p class="modal-desc">提出你的根问题，智能体将据此生成第一个节点</p>
+      <textarea id="input-root" class="input" rows="3" placeholder="例如：什么是强化学习？"></textarea>
+      <div class="file-picker">
+        <div class="file-picker-head">
+          <span class="file-picker-label">参考文件（可选，作为这个根问题的背景资料）</span>
+          <button class="btn ghost" id="btn-pick-root-files">＋ 添加文件</button>
+        </div>
+        <div class="file-list" id="root-file-list"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn ghost" data-close>取消</button>
+        <button class="btn primary" id="btn-confirm-new">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ask follow-up -->
+  <div class="overlay" id="overlay-ask">
+    <div class="modal">
+      <h2 class="modal-title">追问</h2>
+      <p class="modal-desc" id="ask-parent-preview"></p>
+      <textarea id="input-ask" class="input" rows="3" placeholder="针对这个节点，你想继续追问什么？"></textarea>
+      <div class="modal-actions">
+        <button class="btn ghost" data-close>取消</button>
+        <button class="btn primary" id="btn-confirm-ask">追问</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="overlay" id="overlay-settings">
+    <div class="modal modal-wide">
+      <h2 class="modal-title">设置</h2>
+      <p class="modal-desc">配置你购买的 API —— 支持 DeepSeek、豆包、硅基流动及任意 OpenAI 兼容接口</p>
+
+      <div class="form">
+        <div class="field">
+          <label>服务商</label>
+          <select id="set-provider" class="input"></select>
+        </div>
+        <div class="field">
+          <label>Base URL</label>
+          <input id="set-base-url" class="input mono" placeholder="https://api.deepseek.com/v1" />
+        </div>
+        <div class="field">
+          <label>API Key</label>
+          <input id="set-api-key" class="input mono" type="password" placeholder="sk-..." autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>模型名称</label>
+          <input id="set-model" class="input mono" placeholder="deepseek-chat" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>温度 <span class="hint">temperature</span></label>
+            <input id="set-temp" class="input" type="number" step="0.1" min="0" max="2" />
+          </div>
+          <div class="field">
+            <label>最大长度 <span class="hint">max_tokens</span></label>
+            <input id="set-max-tokens" class="input" type="number" step="1" min="1" />
+          </div>
+        </div>
+      </div>
+
+      <div class="test-row">
+        <button class="btn ghost" id="btn-test">测试连接</button>
+        <span class="test-result" id="test-result"></span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn ghost" data-close>取消</button>
+        <button class="btn primary" id="btn-save-settings">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export -->
+  <div class="overlay" id="overlay-export">
+    <div class="modal modal-wide">
+      <h2 class="modal-title">导出思考路径</h2>
+      <p class="modal-desc">从根到每一片叶子的完整脉络</p>
+      <textarea id="export-output" class="input mono" rows="14" readonly></textarea>
+      <div class="modal-actions">
+        <button class="btn ghost" data-close>关闭</button>
+        <button class="btn primary" id="btn-copy-export">复制</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- File note (human-written description) -->
+  <div class="overlay" id="overlay-note">
+    <div class="modal">
+      <h2 class="modal-title">文件说明</h2>
+      <p class="modal-desc" id="note-filename"></p>
+      <textarea id="input-note" class="input" rows="4" placeholder="给这个文件写一段说明，例如：这是我导师的论文，重点看第三章的方法论"></textarea>
+      <div class="modal-actions">
+        <button class="btn ghost" data-close>取消</button>
+        <button class="btn primary" id="btn-confirm-note">保存说明</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
