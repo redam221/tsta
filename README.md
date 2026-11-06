@@ -1,5 +1,9 @@
 # 🌳 TSTA — Tree-Structured Thinking Agent
 
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![CI](https://github.com/redam221/tsta/actions/workflows/ci.yml/badge.svg)](https://github.com/redam221/tsta/actions)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 **A new AI agent paradigm for AI-assisted self-education.**
 
 TSTA models the learning process as a strict **single-parent, multi-child tree structure**, where each node represents a `(Question, Answer, Context)` knowledge unit. This solves the core pain points of linear AI assistants in self-education: lost branch questions, context chaos, untraceable knowledge sources, and hallucinations.
@@ -168,7 +172,10 @@ tsta/
 │   └── test_integration.py  # API integration tests
 ├── examples/
 │   └── basic_usage.py       # End-to-end usage demo
+├── paper/
+│   └── paper.md             # Bilingual paper (Chinese/English)
 ├── docs/
+├── .github/workflows/       # CI (runs pytest)
 ├── pyproject.toml
 ├── requirements.txt
 ├── .env.example
@@ -254,6 +261,11 @@ pytest tests/ -v --cov=tsta
 8. **Voice interface**: Speech-to-text for questions, TTS for answers — mobile learning
 9. **Export formats**: Mind map (XMind), Anki flashcards, Obsidian vault, PDF reports
 10. **Plugin system**: Allow community plugins for custom LLM backends, storage backends, UI themes
+
+## Paper
+
+The full paper (bilingual, Chinese/English) is available at
+[`paper/paper.md`](paper/paper.md).
 
 ## Citation
 
